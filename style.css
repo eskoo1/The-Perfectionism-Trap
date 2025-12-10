@@ -1,574 +1,619 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+// Game variables
+let stress = 0;
+let questionIndex = 0;
+let time = 20;
+let timer;
+let gameCompleted = false;
+let questionsAnswered = 0;
+const totalQuestions = 15;
 
-body {
-    font-family: 'Nunito', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    color: #333;
-}
-
-.game-container {
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    padding: 30px;
-    border-radius: 25px;
-    width: 100%;
-    max-width: 550px;
-    box-shadow: 0 25px 75px rgba(0, 0, 0, 0.2);
-    animation: fadeIn 1s ease-out;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Appearance animation */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Game header */
-.game-header {
-    text-align: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-}
-
-.game-header h1 {
-    font-size: 2.3em;
-    color: #2d3436;
-    margin-bottom: 8px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.subtitle {
-    color: #636e72;
-    font-size: 1.1em;
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-
-/* Game progress */
-.progress {
-    margin-top: 15px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 8px;
-    background: #e9ecef;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 5px;
-}
-
-.progress-fill {
-    height: 100%;
-    width: 6.66%;
-    background: linear-gradient(90deg, #4CAF50, #45b7d1);
-    border-radius: 4px;
-    transition: width 0.5s ease;
-}
-
-#progress-text {
-    font-size: 0.9em;
-    color: #636e72;
-    font-weight: 600;
-}
-
-/* Question container */
-.question-container {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    padding: 25px;
-    border-radius: 18px;
-    margin-bottom: 25px;
-    border-left: 6px solid #667eea;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.question-container::before {
-    content: '❓';
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 1.5em;
-    opacity: 0.1;
-}
-
-.question-container:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-}
-
-#question {
-    font-size: 1.35em;
-    line-height: 1.5;
-    color: #2d3436;
-    font-weight: 600;
-    text-align: center;
-    padding-right: 30px;
-}
-
-/* Answer choices container */
-.choices-container {
-    margin-bottom: 25px;
-}
-
-#choices button {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    margin: 10px 0;
-    padding: 18px 25px;
-    font-size: 1.1em;
-    border: none;
-    border-radius: 15px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 600;
-    color: white;
-    text-align: left;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    border: 2px solid transparent;
-}
-
-.choice-letter {
-    font-size: 1.3em;
-    font-weight: 800;
-    margin-right: 15px;
-    background: rgba(255, 255, 255, 0.2);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.choice-text {
-    flex: 1;
-}
-
-#choices button:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-#choices button:active {
-    transform: translateY(-1px);
-}
-
-/* Answer choice colors */
-#choices button:nth-child(1) {
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-    color: #333;
-}
-
-#choices button:nth-child(2) {
-    background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-    color: #333;
-}
-
-#choices button:nth-child(3) {
-    background: linear-gradient(135deg, #84fab0, #8fd3f4);
-    color: #333;
-}
-
-/* Statistics container */
-.stats-container {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 18px;
-    margin-bottom: 20px;
-    border: 2px solid #e9ecef;
-    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.stat-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    gap: 15px;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    background: white;
-    padding: 12px 18px;
-    border-radius: 12px;
-    flex: 1;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e9ecef;
-}
-
-.stat-icon {
-    font-size: 1.4em;
-    margin-right: 10px;
-    min-width: 30px;
-}
-
-.stat-label {
-    font-weight: 600;
-    color: #495057;
-    margin-right: 8px;
-    font-size: 0.95em;
-}
-
-.stat-value {
-    font-weight: 700;
-    color: #2d3436;
-    font-size: 1.1em;
-    margin-left: auto;
-}
-
-/* Stress progress bar */
-.bar-container {
-    margin: 20px 0;
-}
-
-.bar {
-    width: 100%;
-    height: 22px;
-    background: linear-gradient(90deg, #e9ecef, #dee2e6);
-    border-radius: 11px;
-    overflow: hidden;
-    margin-bottom: 8px;
-    position: relative;
-    border: 2px solid white;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 25%, #FFC107 50%, #FF9800 75%, #F44336 100%);
-    transition: width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
-}
-
-.fill::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: shimmer 3s infinite linear;
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-
-.bar-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85em;
-    color: #6c757d;
-    font-weight: 600;
-    margin-top: 5px;
-}
-
-/* Timer */
-.timer-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    padding: 15px;
-    border-radius: 15px;
-    gap: 15px;
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-    border: 2px solid #e9ecef;
-}
-
-.timer-label {
-    font-weight: 600;
-    color: #495057;
-    font-size: 1.1em;
-}
-
-.timer-circle {
-    position: relative;
-    width: 60px;
-    height: 60px;
-}
-
-.timer-bg {
-    fill: none;
-    stroke: #e9ecef;
-    stroke-width: 6;
-}
-
-.timer-fg {
-    fill: none;
-    stroke: #4CAF50;
-    stroke-width: 6;
-    stroke-linecap: round;
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
-    transition: stroke-dashoffset 1s linear;
-}
-
-.timer-value {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.2em;
-    font-weight: 700;
-    color: #2d3436;
-}
-
-/* Game footer */
-.game-footer {
-    text-align: center;
-    padding-top: 15px;
-    border-top: 2px solid rgba(0, 0, 0, 0.1);
-    color: #636e72;
-}
-
-.game-tip {
-    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-    padding: 12px 20px;
-    border-radius: 12px;
-    border-left: 5px solid #2196F3;
-    font-weight: 600;
-    font-size: 0.95em;
-    color: #1565c0;
-}
-
-/* Feedback */
-.feedback {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 26px;
-    font-weight: 800;
-    z-index: 1000;
-    pointer-events: none;
-    opacity: 0;
-    text-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
-    padding: 15px 35px;
-    border-radius: 60px;
-    backdrop-filter: blur(20px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    min-width: 200px;
-    text-align: center;
-    transition: opacity 0.3s;
-}
-
-/* Shake animation */
-.shake {
-    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-    20%, 40%, 60%, 80% { transform: translateX(5px); }
-}
-
-/* Floating text animation */
-@keyframes floatUp {
-    0% { 
-        opacity: 1; 
-        transform: translate(-50%, -50%); 
+// Extended question array
+const questions = [
+    {
+        q: "There's an important test tomorrow. Do you decide to review the material once more?",
+        choices: [
+            {text:"Do everything perfectly ✍️", stress:+8},
+            {text:"Review the main topics 😴", stress:+3},
+            {text:"Relax and rest 🧘", stress:-4}
+        ]
+    },
+    {
+        q:"In a group project, you're offered to take the difficult part",
+        choices:[
+            {text:"Do everything yourself 💪", stress:+12},
+            {text:"Distribute tasks equally 🤝", stress:+4},
+            {text:"Discuss the distribution 🗣️", stress:-2}
+        ]
+    },
+    {
+        q:"You got 4 instead of 5. What are your thoughts?",
+        choices:[
+            {text:"Could have done better 😣", stress:+10},
+            {text:"Learning from mistakes 🙂", stress:+2},
+            {text:"Good result! 🎉", stress:-3}
+        ]
+    },
+    {
+        q:"The project is almost ready, but details can be improved",
+        choices:[
+            {text:"Bring to perfection 🔥", stress:+9},
+            {text:"Improve important moments ✅", stress:+3},
+            {text:"Good enough as is 🚀", stress:-4}
+        ]
+    },
+    {
+        q:"A colleague praises your work, but you see flaws",
+        choices:[
+            {text:"Point out the mistakes 📝", stress:+7},
+            {text:"Thank them and take note 🤫", stress:+2},
+            {text:"Accept the compliment 😊", stress:-5}
+        ]
+    },
+    {
+        q:"Urgent task due in one hour instead of three",
+        choices:[
+            {text:"Do it perfectly 🕐", stress:+15},
+            {text:"Do it with quality ⚡", stress:+5},
+            {text:"Discuss deadlines 🤝", stress:+1}
+        ]
+    },
+    {
+        q:"Manager praises work but asks for revisions",
+        choices:[
+            {text:"Redo completely 🔄", stress:+8},
+            {text:"Make necessary edits ✏️", stress:+3},
+            {text:"Suggest an alternative 💡", stress:+1}
+        ]
+    },
+    {
+        q:"You're 5 minutes late for a meeting",
+        choices:[
+            {text:"Apologize several times 😰", stress:+6},
+            {text:"Apologize once 🙏", stress:+2},
+            {text:"Don't emphasize it 😐", stress:-2}
+        ]
+    },
+    {
+        q:"Email contains a small error",
+        choices:[
+            {text:"Rewrite completely ✍️", stress:+7},
+            {text:"Fix the error ✅", stress:+1},
+            {text:"Leave as is 📧", stress:-3}
+        ]
+    },
+    {
+        q:"Presentation is 90% ready",
+        choices:[
+            {text:"Bring to 100% 🔥", stress:+9},
+            {text:"Leave as is 🎯", stress:+2},
+            {text:"Ask colleagues' opinion 👥", stress:+1}
+        ]
+    },
+    {
+        q:"Free evening after work",
+        choices:[
+            {text:"Learn something new 📚", stress:+5},
+            {text:"Relax with family 👨‍👩‍👧", stress:-3},
+            {text:"Do a hobby 🎨", stress:-4}
+        ]
+    },
+    {
+        q:"Notice a mistake in colleague's report",
+        choices:[
+            {text:"Point out all mistakes 🎯", stress:+6},
+            {text:"Point out the main thing 📌", stress:+2},
+            {text:"Praise the work 🌟", stress:-2}
+        ]
+    },
+    {
+        q:"You're offered a promotion with more workload",
+        choices:[
+            {text:"Take all tasks immediately 🚀", stress:+12},
+            {text:"Discuss gradual increase 🤝", stress:+4},
+            {text:"Take time to think ⏰", stress:-1}
+        ]
+    },
+    {
+        q:"Project completed ahead of schedule",
+        choices:[
+            {text:"Find something to improve 🔍", stress:+7},
+            {text:"Rest until deadline 🛋️", stress:-4},
+            {text:"Announce readiness 📢", stress:+1}
+        ]
+    },
+    {
+        q:"Colleague does work faster but less qualitatively",
+        choices:[
+            {text:"Do my part perfectly ✨", stress:+10},
+            {text:"Balance speed and quality ⚖️", stress:+3},
+            {text:"Accept different approaches 🌈", stress:-3}
+        ]
     }
-    100% { 
-        opacity: 0; 
-        transform: translate(-50%, -150px); 
-    }
-}
+];
 
-/* Pulsation animation */
-.pulse {
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-}
-
-/* Result classes */
-.burnout {
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-    color: #333;
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-}
-
-.tense {
-    background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-    color: #333;
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-}
-
-.balanced {
-    background: linear-gradient(135deg, #84fab0, #8fd3f4);
-    color: #333;
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-}
-
-.excellent {
-    background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
-    color: #333;
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-}
-
-/* Restart button */
-.restart-btn {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    padding: 16px 45px;
-    font-size: 1.2em;
-    border-radius: 60px;
-    cursor: pointer;
-    margin-top: 25px;
-    font-weight: 700;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    display: inline-block;
-}
-
-.restart-btn:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
-}
-
-/* Result styles */
-.result-stats {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 20px;
-    border-radius: 15px;
-    margin: 20px 0;
-    text-align: left;
-}
-
-.result-stats p {
-    margin: 10px 0;
-    padding: 8px 15px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    font-size: 1.1em;
-}
-
-.advice-box {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 20px;
-    border-radius: 15px;
-    margin: 20px 0;
-    border-left: 5px solid #667eea;
-    font-style: italic;
-    line-height: 1.6;
-}
-
-/* Responsiveness */
-@media (max-width: 768px) {
-    .game-container {
-        padding: 20px;
-        margin: 10px;
+// Question loading function
+function loadQuestion() {
+    console.log("Loading question:", questionIndex);
+    
+    // Check if game is completed
+    if (questionIndex >= questions.length) {
+        console.log("Game completed, calling finishGame");
+        finishGame();
+        return;
     }
     
-    .game-header h1 {
-        font-size: 1.9em;
+    if (gameCompleted) {
+        console.log("Game already completed");
+        return;
+    }
+
+    // Get current question
+    const currentQuestion = questions[questionIndex];
+    console.log("Current question:", currentQuestion.q);
+    
+    // Set question text
+    const questionElement = document.getElementById("question");
+    if (questionElement) {
+        questionElement.textContent = currentQuestion.q;
+    } else {
+        console.error("Question element not found!");
+        return;
+    }
+
+    // Update progress
+    updateProgress();
+
+    // Create answer choice buttons
+    const choicesDiv = document.getElementById("choices");
+    if (!choicesDiv) {
+        console.error("Choices element not found!");
+        return;
     }
     
-    .stat-row {
-        flex-direction: column;
-        gap: 10px;
+    // Clear previous choices
+    choicesDiv.innerHTML = "";
+    
+    // Create buttons for each answer choice
+    const letters = ['A', 'B', 'C'];
+    currentQuestion.choices.forEach((choice, index) => {
+        const button = document.createElement("button");
+        
+        button.innerHTML = `
+            <span class="choice-letter">${letters[index]}</span>
+            <span class="choice-text">${choice.text}</span>
+        `;
+        
+        // Add click handler
+        button.onclick = function() {
+            console.log("Answer selected:", choice.text, "stress:", choice.stress);
+            selectAnswer(choice.stress);
+        };
+        
+        choicesDiv.appendChild(button);
+    });
+
+    // Start timer
+    startTimer();
+    
+    // Save game state
+    saveGameState();
+}
+
+// Answer selection function
+function selectAnswer(stressChange) {
+    console.log("Answer selected, stress change:", stressChange);
+    
+    if (gameCompleted) return;
+    
+    // Show feedback
+    showFeedback(stressChange);
+    
+    // Update counters
+    questionsAnswered++;
+    stress += stressChange;
+    
+    // Limit stress between 0 and 100
+    if (stress < 0) stress = 0;
+    if (stress > 100) stress = 100;
+    
+    console.log("New stress level:", stress);
+    
+    // Update UI
+    updateUI();
+    
+    // Shake animation for high stress
+    if (stress > 85) {
+        document.body.classList.add("shake");
+        setTimeout(() => {
+            document.body.classList.remove("shake");
+        }, 500);
     }
     
-    .stat-item {
-        width: 100%;
-    }
+    // Move to next question
+    questionIndex++;
     
-    #question {
-        font-size: 1.2em;
-    }
+    // Small delay before loading next question
+    setTimeout(() => {
+        loadQuestion();
+    }, 800);
+}
+
+// Progress update function
+function updateProgress() {
+    const progressFill = document.getElementById("progress-fill");
+    const progressText = document.getElementById("progress-text");
     
-    #choices button {
-        padding: 16px 20px;
-        font-size: 1em;
-    }
-    
-    .timer-container {
-        flex-direction: column;
-        gap: 10px;
-        padding: 12px;
+    if (progressFill && progressText) {
+        const progressPercent = ((questionIndex + 1) / totalQuestions) * 100;
+        progressFill.style.width = `${progressPercent}%`;
+        progressText.textContent = `Question ${questionIndex + 1}/${totalQuestions}`;
     }
 }
 
-@media (max-width: 480px) {
-    body {
-        padding: 10px;
+// Feedback display function
+function showFeedback(stressChange) {
+    const feedback = document.getElementById("feedback");
+    if (!feedback) return;
+    
+    let message = "";
+    let color = "";
+    let emoji = "";
+    
+    if (stressChange > 8) {
+        message = `+${stressChange} stress`;
+        color = "#ff4444";
+        emoji = "😫";
+    } else if (stressChange > 3) {
+        message = `+${stressChange} stress`;
+        color = "#ff9800";
+        emoji = "😟";
+    } else if (stressChange > 0) {
+        message = `+${stressChange} stress`;
+        color = "#ffb74d";
+        emoji = "😐";
+    } else if (stressChange < 0) {
+        message = `${stressChange} stress`;
+        color = "#4CAF50";
+        emoji = "😊";
+    } else {
+        message = `${stressChange} stress`;
+        color = "#cccccc";
+        emoji = "😶";
     }
     
-    .game-container {
-        padding: 15px;
-        border-radius: 20px;
-    }
+    feedback.innerHTML = `<span style="font-size: 1.3em">${emoji}</span><br>${message}`;
+    feedback.style.cssText = `
+        color: ${color};
+        background: ${color}15;
+        border: 2px solid ${color};
+        opacity: 1;
+        animation: floatUp 1.2s ease-out forwards;
+        box-shadow: 0 10px 30px ${color}30;
+    `;
     
-    .game-header h1 {
-        font-size: 1.6em;
-    }
-    
-    .subtitle {
-        font-size: 0.95em;
-    }
-    
-    #choices button {
-        font-size: 0.95em;
-        padding: 14px 18px;
-    }
-    
-    .choice-letter {
-        width: 30px;
-        height: 30px;
-        font-size: 1.1em;
-        margin-right: 12px;
-    }
-    
-    .stat-item {
-        font-size: 0.9em;
-        padding: 10px 15px;
-    }
-    
-    .timer-circle {
-        width: 50px;
-        height: 50px;
-    }
+    setTimeout(() => {
+        feedback.style.opacity = "0";
+    }, 1000);
+}
 
+// UI update function
+function updateUI() {
+    console.log("Updating UI, stress:", stress);
+    
+    // Update stress bar
+    const stressBar = document.getElementById("stress-bar");
+    const stressValue = document.getElementById("stress-value");
+    
+    if (stressBar) {
+        stressBar.style.width = `${stress}%`;
+    }
+    
+    if (stressValue) {
+        stressValue.textContent = `${stress}%`;
+    }
+    
+    // Update mood
+    const moodElement = document.getElementById("mood");
+    if (moodElement) {
+        let moodText = "";
+        let moodColor = "";
+        let moodEmoji = "";
+        
+        if (stress < 20) {
+            moodText = "Calm";
+            moodColor = "#4CAF50";
+            moodEmoji = "😊";
+        } else if (stress < 40) {
+            moodText = "Balanced";
+            moodColor = "#8BC34A";
+            moodEmoji = "🙂";
+        } else if (stress < 60) {
+            moodText = "Tense";
+            moodColor = "#FFC107";
+            moodEmoji = "😐";
+        } else if (stress < 80) {
+            moodText = "Anxious";
+            moodColor = "#FF9800";
+            moodEmoji = "😬";
+        } else {
+            moodText = "Panicked";
+            moodColor = "#F44336";
+            moodEmoji = "😨";
+        }
+        
+        moodElement.innerHTML = `${moodEmoji} ${moodText}`;
+        moodElement.style.color = moodColor;
+    }
+}
+
+// Timer start function
+function startTimer() {
+    console.log("Starting timer");
+    
+    // Reset time
+    time = 20;
+    updateTimer();
+    
+    // Clear previous timer
+    if (timer) {
+        clearInterval(timer);
+    }
+    
+    // Start new timer
+    timer = setInterval(() => {
+        time--;
+        updateTimer();
+        
+        if (time <= 0) {
+            clearInterval(timer);
+            console.log("Time's up!");
+            stress += 4; // Penalty for slowness
+            if (stress > 100) stress = 100;
+            updateUI();
+            questionIndex++;
+            loadQuestion();
+        }
+    }, 1000);
+}
+
+// Timer update function
+function updateTimer() {
+    const timerElement = document.getElementById("timer");
+    const timerCircle = document.getElementById("timer-circle");
+    
+    if (!timerElement || !timerCircle) return;
+    
+    timerElement.textContent = time;
+    
+    // Update timer circle
+    const circumference = 2 * Math.PI * 27;
+    const offset = circumference - (time / 20) * circumference;
+    timerCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+    timerCircle.style.strokeDashoffset = offset;
+    
+    // Change color based on remaining time
+    let timerColor = "#4CAF50";
+    if (time <= 7) {
+        timerColor = "#F44336";
+        timerElement.classList.add("pulse");
+    } else if (time <= 14) {
+        timerColor = "#FF9800";
+        timerElement.classList.remove("pulse");
+    } else {
+        timerElement.classList.remove("pulse");
+    }
+    
+    timerCircle.style.stroke = timerColor;
+    timerElement.style.color = timerColor;
+}
+
+// Game completion function
+function finishGame() {
+    console.log("Finishing game");
+    
+    gameCompleted = true;
+    clearInterval(timer);
+    
+    const choicesDiv = document.getElementById("choices");
+    const questionElement = document.getElementById("question");
+    
+    if (!choicesDiv || !questionElement) return;
+    
+    // Clear answer choices
+    choicesDiv.innerHTML = "";
+    
+    // Determine result
+    let resultTitle = "";
+    let resultClass = "";
+    let advice = "";
+    
+    if (stress > 80) {
+        resultTitle = "🚨 High burnout risk";
+        resultClass = "burnout";
+        advice = "Your perfectionism may lead to chronic stress. Try practicing the 'good enough' technique.";
+    } else if (stress > 60) {
+        resultTitle = "⚠ Elevated stress";
+        resultClass = "tense";
+        advice = "You tend to take on too much responsibility. Learn to delegate and set boundaries.";
+    } else if (stress > 40) {
+        resultTitle = "⚖ Moderate tension";
+        resultClass = "balanced";
+        advice = "You're on the path to good balance. Continue working on mindful choices.";
+    } else if (stress > 20) {
+        resultTitle = "✅ Good balance";
+        resultClass = "balanced";
+        advice = "You manage your priorities well. Keep it up!";
+    } else {
+        resultTitle = "🌟 Excellent result!";
+        resultClass = "excellent";
+        advice = "You're a stress management master! You understand the importance of work-life balance.";
+    }
+    
+    // Calculate average stress
+    const avgStress = questionsAnswered > 0 ? (stress / questionsAnswered).toFixed(1) : "0";
+    
+    // Show results
+    questionElement.innerHTML = `
+        <div class="${resultClass}">
+            <h2>🎮 Game completed!</h2>
+            <h3>${resultTitle}</h3>
+            <p><strong>${advice}</strong></p>
+            
+            <div class="result-stats">
+                <p>📊 Final stress level: <strong>${stress}%</strong></p>
+                <p>❓ Questions answered: <strong>${questionsAnswered}/${totalQuestions}</strong></p>
+                <p>📈 Average stress per answer: <strong>${avgStress}%</strong></p>
+            </div>
+            
+            <div class="advice-box">
+                <p>💡 Remember: Perfection is an illusion, while health and well-being are real values.</p>
+            </div>
+            
+            <button onclick="restartGame()" class="restart-btn">🔄 Play again</button>
+        </div>
+    `;
+    
+    // Save result
+    saveResult();
+}
+
+// Result saving function
+function saveResult() {
+    try {
+        const results = JSON.parse(localStorage.getItem('perfectionismResults') || '[]');
+        results.push({
+            date: new Date().toLocaleString(),
+            stress: stress,
+            questionsAnswered: questionsAnswered,
+            totalQuestions: totalQuestions
+        });
+        
+        if (results.length > 20) {
+            results.shift();
+        }
+        
+        localStorage.setItem('perfectionismResults', JSON.stringify(results));
+        console.log("Result saved");
+    } catch (error) {
+        console.error("Error saving result:", error);
+    }
+}
+
+// Game state saving function
+function saveGameState() {
+    try {
+        const gameState = {
+            stress: stress,
+            questionIndex: questionIndex,
+            questionsAnswered: questionsAnswered
+        };
+        localStorage.setItem('perfectionismGameState', JSON.stringify(gameState));
+    } catch (error) {
+        console.error("Error saving game state:", error);
+    }
+}
+
+// Game state loading function
+function loadGameState() {
+    try {
+        const savedState = localStorage.getItem('perfectionismGameState');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            stress = state.stress || 0;
+            questionIndex = state.questionIndex || 0;
+            questionsAnswered = state.questionsAnswered || 0;
+            
+            console.log("State loaded:", state);
+            updateUI();
+            updateProgress();
+        }
+    } catch (error) {
+        console.error("Error loading game state:", error);
+    }
+}
+
+// Game restart function
+function restartGame() {
+    console.log("Restarting game");
+    
+    stress = 0;
+    questionIndex = 0;
+    questionsAnswered = 0;
+    gameCompleted = false;
+    
+    if (timer) {
+        clearInterval(timer);
+    }
+    
+    const questionElement = document.getElementById("question");
+    const choicesDiv = document.getElementById("choices");
+    
+    if (questionElement) {
+        questionElement.innerHTML = "";
+        questionElement.className = "";
+    }
+    
+    if (choicesDiv) {
+        choicesDiv.innerHTML = "";
+    }
+    
+    updateUI();
+    updateProgress();
+    loadQuestion();
+}
+
+// Game initialization on page load
+window.onload = function() {
+    console.log("Page loaded, initializing game...");
+    
+    // Load saved state
+    loadGameState();
+    
+    // Load first question
+    loadQuestion();
+    
+    // Add autosave handler
+    window.addEventListener('beforeunload', saveGameState);
+    
+    // Add keyboard handlers
+    document.addEventListener('keydown', function(event) {
+        // If game completed, R restarts
+        if (gameCompleted && (event.key === 'r' || event.key === 'R')) {
+            restartGame();
+            return;
+        }
+        
+        // If game not completed, A/B/C select answers
+        if (!gameCompleted) {
+            const choices = document.querySelectorAll('#choices button');
+            if (choices.length === 0) return;
+            
+            if (event.key === 'a' || event.key === 'A' || event.key === '1') {
+                choices[0].click();
+            } else if (event.key === 'b' || event.key === 'B' || event.key === '2') {
+                choices[1].click();
+            } else if (event.key === 'c' || event.key === 'C' || event.key === '3') {
+                choices[2].click();
+            } else if (event.key === 'Enter') {
+                // Random choice for demonstration
+                const randomIndex = Math.floor(Math.random() * choices.length);
+                choices[randomIndex].click();
+            }
+        }
+    });
+    
+    console.log("Game ready!");
+};
+
+// Simple debug function
+function debugGame() {
+    console.log("=== DEBUG INFORMATION ===");
+    console.log("questionIndex:", questionIndex);
+    console.log("stress:", stress);
+    console.log("questionsAnswered:", questionsAnswered);
+    console.log("gameCompleted:", gameCompleted);
+    console.log("questions length:", questions.length);
+    console.log("======================");
 }
 // Answer selection function
 function selectAnswer(stressChange) {
