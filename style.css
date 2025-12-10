@@ -568,4 +568,222 @@ body {
         width: 50px;
         height: 50px;
     }
+
+}
+// Answer selection function
+function selectAnswer(stressChange) {
+    console.log("Answer selected, stress change:", stressChange);
+    
+    if (gameCompleted) return;
+    
+    // Show feedback animation EVERY TIME
+    showFeedback(stressChange);
+    
+    // Update counters
+    questionsAnswered++;
+    stress += stressChange;
+    
+    // Limit stress between 0 and 100
+    if (stress < 0) stress = 0;
+    if (stress > 100) stress = 100;
+    
+    console.log("New stress level:", stress);
+    
+    // Update UI
+    updateUI();
+    
+    // Shake animation for high stress
+    if (stress > 85) {
+        document.body.classList.add("shake");
+        setTimeout(() => {
+            document.body.classList.remove("shake");
+        }, 500);
+    }
+    
+    // Move to next question
+    questionIndex++;
+    
+    // Small delay before loading next question
+    setTimeout(() => {
+        loadQuestion();
+    }, 800);
+}
+
+// Feedback display function (UPDATED to show every time)
+function showFeedback(stressChange) {
+    const feedback = document.getElementById("feedback");
+    if (!feedback) return;
+    
+    let message = "";
+    let color = "";
+    let emoji = "";
+    let fontSize = "1.3em";
+    let padding = "15px 35px";
+    let borderRadius = "60px";
+    
+    // Different styles based on stress change amount
+    if (stressChange > 8) {
+        message = `+${stressChange} stress`;
+        color = "#ff4444";
+        emoji = "😫";
+        fontSize = "1.5em";
+    } else if (stressChange > 3) {
+        message = `+${stressChange} stress`;
+        color = "#ff9800";
+        emoji = "😟";
+        fontSize = "1.4em";
+    } else if (stressChange > 0) {
+        message = `+${stressChange} stress`;
+        color = "#ffb74d";
+        emoji = "😐";
+        fontSize = "1.3em";
+    } else if (stressChange < 0) {
+        message = `${stressChange} stress`;
+        color = "#4CAF50";
+        emoji = "😊";
+        fontSize = "1.5em";
+    } else {
+        message = `${stressChange} stress`;
+        color = "#cccccc";
+        emoji = "😶";
+        fontSize = "1.2em";
+    }
+    
+    // Create the feedback content
+    feedback.innerHTML = `<span style="font-size: ${fontSize}">${emoji}</span><br>${message}`;
+    
+    // Apply styles with animation
+    feedback.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: ${color};
+        background: ${color}15;
+        border: 2px solid ${color};
+        font-size: 26px;
+        font-weight: 800;
+        z-index: 1000;
+        pointer-events: none;
+        opacity: 1;
+        text-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+        padding: ${padding};
+        border-radius: ${borderRadius};
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        min-width: 200px;
+        text-align: center;
+        transition: opacity 0.3s;
+        animation: floatUp 1.2s ease-out forwards;
+        box-shadow: 0 10px 30px ${color}30;
+    `;
+    
+    // Make sure feedback is visible
+    feedback.style.display = 'block';
+    feedback.style.visibility = 'visible';
+    feedback.style.opacity = '1';
+    
+    // Hide after animation completes
+    setTimeout(() => {
+        feedback.style.opacity = "0";
+        setTimeout(() => {
+            feedback.style.display = 'none';
+        }, 300);
+    }, 1000);
+}
+
+// Update the floatUp animation to be more visible
+const style = document.createElement('style');
+style.textContent = `
+@keyframes floatUp {
+    0% { 
+        opacity: 1; 
+        transform: translate(-50%, -50%); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: translate(-50%, -180px); 
+    }
+}
+`;
+document.head.appendChild(style);
+
+// Also add animation to stress bar when it changes
+function updateUI() {
+    console.log("Updating UI, stress:", stress);
+    
+    // Update stress bar
+    const stressBar = document.getElementById("stress-bar");
+    const stressValue = document.getElementById("stress-value");
+    
+    if (stressBar) {
+        stressBar.style.width = `${stress}%`;
+        
+        // Add brief highlight animation to stress bar
+        stressBar.style.boxShadow = '0 0 15px rgba(255, 100, 100, 0.6)';
+        setTimeout(() => {
+            stressBar.style.boxShadow = 'none';
+        }, 300);
+    }
+    
+    if (stressValue) {
+        // Animate stress value change
+        const oldValue = parseInt(stressValue.textContent) || 0;
+        const newValue = stress;
+        
+        // If value changed significantly, animate it
+        if (Math.abs(newValue - oldValue) > 2) {
+            stressValue.style.transform = 'scale(1.3)';
+            stressValue.style.color = newValue > oldValue ? '#ff4444' : '#4CAF50';
+            
+            setTimeout(() => {
+                stressValue.style.transform = 'scale(1)';
+                stressValue.style.color = '#2d3436';
+            }, 500);
+        }
+        
+        stressValue.textContent = `${stress}%`;
+    }
+    
+    // Update mood
+    const moodElement = document.getElementById("mood");
+    if (moodElement) {
+        let moodText = "";
+        let moodColor = "";
+        let moodEmoji = "";
+        
+        if (stress < 20) {
+            moodText = "Calm";
+            moodColor = "#4CAF50";
+            moodEmoji = "😊";
+        } else if (stress < 40) {
+            moodText = "Balanced";
+            moodColor = "#8BC34A";
+            moodEmoji = "🙂";
+        } else if (stress < 60) {
+            moodText = "Tense";
+            moodColor = "#FFC107";
+            moodEmoji = "😐";
+        } else if (stress < 80) {
+            moodText = "Anxious";
+            moodColor = "#FF9800";
+            moodEmoji = "😬";
+        } else {
+            moodText = "Panicked";
+            moodColor = "#F44336";
+            moodEmoji = "😨";
+        }
+        
+        // Check if mood changed
+        const currentMood = moodElement.textContent.split(' ')[1] || '';
+        if (currentMood !== moodText) {
+            moodElement.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                moodElement.style.transform = 'scale(1)';
+            }, 300);
+        }
+        
+        moodElement.innerHTML = `${moodEmoji} ${moodText}`;
+        moodElement.style.color = moodColor;
+    }
 }
